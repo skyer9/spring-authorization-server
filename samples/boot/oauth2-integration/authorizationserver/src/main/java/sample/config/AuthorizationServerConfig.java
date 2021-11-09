@@ -21,6 +21,8 @@ import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import sample.jose.Jwks;
 
 import org.springframework.context.annotation.Bean;
@@ -81,6 +83,10 @@ public class AuthorizationServerConfig {
 
 		// Save registered client in db as if in-memory
 		JdbcRegisteredClientRepository registeredClientRepository = new JdbcRegisteredClientRepository(jdbcTemplate);
+		JdbcRegisteredClientRepository.RegisteredClientParametersMapper registeredClientParametersMapper = new JdbcRegisteredClientRepository.RegisteredClientParametersMapper();
+		PasswordEncoder encoder = new BCryptPasswordEncoder();
+		registeredClientParametersMapper.setPasswordEncoder(encoder);
+		registeredClientRepository.setRegisteredClientParametersMapper(registeredClientParametersMapper);
 		registeredClientRepository.save(registeredClient);
 
 		return registeredClientRepository;
@@ -108,19 +114,4 @@ public class AuthorizationServerConfig {
 	public ProviderSettings providerSettings() {
 		return ProviderSettings.builder().issuer("http://auth-server:9000").build();
 	}
-
-//	@Bean
-//	public EmbeddedDatabase embeddedDatabase() {
-//		// @formatter:off
-//		return new EmbeddedDatabaseBuilder()
-//				.generateUniqueName(true)
-//				.setType(EmbeddedDatabaseType.H2)
-//				.setScriptEncoding("UTF-8")
-//				.addScript("org/springframework/security/oauth2/server/authorization/oauth2-authorization-schema.sql")
-//				.addScript("org/springframework/security/oauth2/server/authorization/oauth2-authorization-consent-schema.sql")
-//				.addScript("org/springframework/security/oauth2/server/authorization/client/oauth2-registered-client-schema.sql")
-//				.build();
-//		// @formatter:on
-//	}
-
 }

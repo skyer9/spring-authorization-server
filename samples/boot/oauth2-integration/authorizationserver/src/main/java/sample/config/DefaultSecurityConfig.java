@@ -18,7 +18,11 @@ package sample.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,6 +30,9 @@ import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 import javax.sql.DataSource;
+
+import java.util.Collection;
+import java.util.List;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -62,7 +69,22 @@ public class DefaultSecurityConfig {
 	// @formatter:off
 	@Bean
 	UserDetailsService users() {
-		return new JdbcUserDetailsManager(dataSource);
+		JdbcUserDetailsManager jdbcUserDetailsManager = new JdbcUserDetailsManager(dataSource);
+
+		try {
+			UserDetails user = jdbcUserDetailsManager.loadUserByUsername("user1");
+		} catch (UsernameNotFoundException ex) {
+			PasswordEncoder encoder = new BCryptPasswordEncoder();
+			UserDetails user = User
+					.withUsername("user1")
+					.passwordEncoder(encoder::encode)
+					.password("password")
+					.roles("USER")
+					.build();
+			jdbcUserDetailsManager.createUser(user);
+		}
+
+		return jdbcUserDetailsManager;
 	}
 	// @formatter:on
 }
