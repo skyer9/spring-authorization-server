@@ -44,21 +44,24 @@ import static org.springframework.security.config.Customizer.withDefaults;
 public class DefaultSecurityConfig {
 
 	private final DataSource dataSource;
-	private final PasswordEncoder passwordEncoder;
+
+	@Bean
+	public PasswordEncoder bCryptPasswordEncoder() {
+		return new BCryptPasswordEncoder();
+	}
 
 	public DefaultSecurityConfig(DataSource dataSource) {
 		this.dataSource = dataSource;
-		passwordEncoder = new BCryptPasswordEncoder();
 	}
 
 	// @formatter:off
 	@Bean
 	SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
 		http
-			.authorizeRequests(authorizeRequests ->
-				authorizeRequests.anyRequest().authenticated()
-			)
-			.formLogin(withDefaults());
+				.authorizeRequests(authorizeRequests ->
+						authorizeRequests.anyRequest().authenticated()
+				)
+				.formLogin(withDefaults());
 		return http.build();
 	}
 	// @formatter:on
@@ -71,9 +74,10 @@ public class DefaultSecurityConfig {
 		try {
 			UserDetails user = jdbcUserDetailsManager.loadUserByUsername("user1");
 		} catch (UsernameNotFoundException ex) {
+			PasswordEncoder encoder = new BCryptPasswordEncoder();
 			UserDetails user = User
 					.withUsername("user1")
-					.passwordEncoder(passwordEncoder::encode)
+					.passwordEncoder(encoder::encode)
 					.password("password")
 					.roles("USER")
 					.build();
