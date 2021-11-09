@@ -44,14 +44,11 @@ import static org.springframework.security.config.Customizer.withDefaults;
 public class DefaultSecurityConfig {
 
 	private final DataSource dataSource;
-
-	@Bean
-	public PasswordEncoder bCryptPasswordEncoder() {
-		return new BCryptPasswordEncoder();
-	}
+	private final PasswordEncoder passwordEncoder;
 
 	public DefaultSecurityConfig(DataSource dataSource) {
 		this.dataSource = dataSource;
+		passwordEncoder = new BCryptPasswordEncoder();
 	}
 
 	// @formatter:off
@@ -74,10 +71,9 @@ public class DefaultSecurityConfig {
 		try {
 			UserDetails user = jdbcUserDetailsManager.loadUserByUsername("user1");
 		} catch (UsernameNotFoundException ex) {
-			PasswordEncoder encoder = new BCryptPasswordEncoder();
 			UserDetails user = User
 					.withUsername("user1")
-					.passwordEncoder(encoder::encode)
+					.passwordEncoder(passwordEncoder::encode)
 					.password("password")
 					.roles("USER")
 					.build();

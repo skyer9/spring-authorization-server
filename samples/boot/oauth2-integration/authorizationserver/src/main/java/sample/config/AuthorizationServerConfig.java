@@ -56,6 +56,8 @@ import javax.sql.DataSource;
 @Configuration(proxyBeanMethods = false)
 public class AuthorizationServerConfig {
 
+	private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
 	@Bean
 	@Order(Ordered.HIGHEST_PRECEDENCE)
 	public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
@@ -81,12 +83,11 @@ public class AuthorizationServerConfig {
 				.clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
 				.build();
 
-		// Save registered client in db as if in-memory
 		JdbcRegisteredClientRepository registeredClientRepository = new JdbcRegisteredClientRepository(jdbcTemplate);
 		JdbcRegisteredClientRepository.RegisteredClientParametersMapper registeredClientParametersMapper = new JdbcRegisteredClientRepository.RegisteredClientParametersMapper();
-		PasswordEncoder encoder = new BCryptPasswordEncoder();
-		registeredClientParametersMapper.setPasswordEncoder(encoder);
+		registeredClientParametersMapper.setPasswordEncoder(passwordEncoder);
 		registeredClientRepository.setRegisteredClientParametersMapper(registeredClientParametersMapper);
+
 		registeredClientRepository.save(registeredClient);
 
 		return registeredClientRepository;
